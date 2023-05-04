@@ -35,17 +35,47 @@ def move_Turtle_WithMemory(screen,turtle,cad, init_theta,theta, size, moves, pos
             actual_heading.append(turtle.heading())
             turtle.penup()
         elif(car==']'):
-            turtle.setpos(actual_dir[-1])
-            turtle.setheading(actual_heading[-1])
+            if len(actual_dir) > 0 and len(actual_heading) > 0:
+                turtle.setpos(actual_dir[-1])
+                turtle.setheading(actual_heading[-1])
             
-            turtle.pendown()
-            actual_dir.pop(-1)
-            actual_heading.pop(-1)
-def create_env(model):
-    best_ind=model.pop.best_ind
-    best_individuals=model.best_fitness_records
-    prod_best_ind=[]
-
-
-
+                turtle.pendown()
+                actual_dir.pop(-1)
+                actual_heading.pop(-1)
+def save_fig(fig_title,cad, init_theta,theta, size, 
+             pos_in, line_color, arrow_color="black"):
+    turtle=lia.Turtle()
+    screen=lia.Screen()
+    turtle.hideturtle()
+    moves={'F':turtle.forward,'G':turtle.forward,'+':turtle.right,'-':turtle.left}                
+    screen.setup(width=1.0,height=1.0)
+    screen.bgcolor('black')
+    turtle._tracer(0, 0)
+    move_Turtle_WithMemory(screen,turtle,cad, init_theta,theta, 
+                           size, moves, pos_in, line_color, arrow_color="black")
+    turtle._update()
+    
+    ps = screen.getcanvas().postscript(colormode='color')
+    lia.bye()
+    # Crear una imagen PIL desde la representación PostScript
+    img = Image.open(io.BytesIO(ps.encode('utf-8')))
+    img.save(fig_title+".png", "png")
+def create_env(best_ind,best_records):
+    
+    best_ind=''.join(best_ind)
+    best_individuals=best_records
+    prod_best_ind={'F':[best_ind]}
+    
+    tree_best=gen_cads('F',prod_best_ind, 4)
+    
+    a=0
+    save_fig("best_individual",tree_best,90,25,15,(0,-100),"#f4511e")
+    for num,rule in enumerate(best_individuals):
+        ind=''.join(rule)
+        prod_ind={'F':[ind]}
+        tree=gen_cads('F',prod_ind, 4)
+        save_fig("ind_"+str(num),tree,90,25,15,(0,-100),"#f4511e")
+        a+=1
+        if a==10:
+            return
 
