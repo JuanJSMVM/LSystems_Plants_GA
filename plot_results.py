@@ -2,6 +2,8 @@ import turtle as lia
 import random
 import io
 from PIL import Image
+import os
+import imageio
 def gen_cads(axiom, product_rules, n_items):
     new_axiom=axiom
     for _ in range(n_items):
@@ -16,6 +18,7 @@ def gen_cads(axiom, product_rules, n_items):
         new_axiom=''.join(list_axiom)          
     return list(new_axiom)
 def move_Turtle_WithMemory(screen,turtle,cad, init_theta,theta, size, moves, pos_in, line_color, arrow_color="black"):
+    lia.TurtleScreen._RUNNING=True
     turtle.color(line_color, arrow_color)
     turtle.penup()
     turtle.setpos(pos_in)
@@ -33,34 +36,44 @@ def move_Turtle_WithMemory(screen,turtle,cad, init_theta,theta, size, moves, pos
         elif(car=='['):
             actual_dir.append(turtle.pos())
             actual_heading.append(turtle.heading())
-            turtle.penup()
+            #turtle.penup()
+            turtle.pendown()
         elif(car==']'):
-            if len(actual_dir) > 0 and len(actual_heading) > 0:
-                turtle.setpos(actual_dir[-1])
-                turtle.setheading(actual_heading[-1])
             
-                turtle.pendown()
-                actual_dir.pop(-1)
-                actual_heading.pop(-1)
+            turtle.setpos(actual_dir[-1])
+            turtle.setheading(actual_heading[-1])
+        
+            #turtle.pendown()
+            turtle.penup()
+            actual_dir.pop(-1)
+            actual_heading.pop(-1)
 def save_fig(fig_title,cad, init_theta,theta, size, 
              pos_in, line_color, arrow_color="black"):
-    turtle=lia.Turtle()
+    
     screen=lia.Screen()
-    turtle.hideturtle()
+    lia.TurtleScreen._RUNNING=True
+    turtle=lia.Turtle()
+    #lia.hideturtle()
+    
     moves={'F':turtle.forward,'G':turtle.forward,'+':turtle.right,'-':turtle.left}                
     screen.setup(width=1.0,height=1.0)
     screen.bgcolor('black')
     turtle._tracer(0, 0)
     move_Turtle_WithMemory(screen,turtle,cad, init_theta,theta, 
-                           size, moves, pos_in, line_color, arrow_color="black")
+                        size, moves, pos_in, line_color, arrow_color)
     turtle._update()
     
     ps = screen.getcanvas().postscript(colormode='color')
-    lia.bye()
+    #lia.done()
+    #screen.mainloop()
+    screen.bye()
     # Crear una imagen PIL desde la representación PostScript
     img = Image.open(io.BytesIO(ps.encode('utf-8')))
-    img.save(fig_title+".png", "png")
-def create_env(best_ind,best_records):
+    img.save(fig_title)
+        
+
+    
+def create_env(best_ind,best_records,main_folder):
     
     best_ind=''.join(best_ind)
     best_individuals=best_records
@@ -68,14 +81,33 @@ def create_env(best_ind,best_records):
     
     tree_best=gen_cads('F',prod_best_ind, 4)
     
-    a=0
-    save_fig("best_individual",tree_best,90,25,15,(0,-100),"#f4511e")
+    
+    root=os.path.join(os.getcwd(),main_folder)
+    if not os.path.exists(root):
+        os.mkdir(root)
+    path_img_best=os.path.join(root,"best_individual.png")
+    save_fig(path_img_best,tree_best,90,29,15,(0,-400),"#f4511e")
+    
     for num,rule in enumerate(best_individuals):
         ind=''.join(rule)
         prod_ind={'F':[ind]}
         tree=gen_cads('F',prod_ind, 4)
-        save_fig("ind_"+str(num),tree,90,25,15,(0,-100),"#f4511e")
-        a+=1
-        if a==10:
-            return
+        path_img_=os.path.join(root,"ind_"+str(num)+".png")
+        #print(prod_ind)
+        save_fig(path_img_,tree,90,29,15,(0,-400),"#f4511e")
+        #time.sleep(2)
 
+def create_gif(main_folder):
+    root=os.path.join(os.getcwd(),main_folder)
+    img_arr = []
+    name_img="ind_"
+    ext=".png"
+    print(root)
+    for ind_num in range(70):
+        name=name_img+str(ind_num)+ext
+        path_img=os.path.join(root, name)
+        img=Image.open(path_img)
+        img_arr.append(img)
+    path_gif=os.path.join(root, "best_gens_inds.gif")
+    imageio.mimsave(path_gif, img_arr)
+    
